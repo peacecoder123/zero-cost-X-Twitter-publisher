@@ -2,6 +2,13 @@
 
 > **Developer:** Radhe Wankhade · [@RadheWankhade01](https://x.com/RadheWankhade01) on X
 
+1.
+<img width="1822" height="902" alt="Screenshot 2026-11-13 021239" src="https://github.com/user-attachments/assets/edbc3880-7202-47e6-9dc5-845d2289e4ca" />
+2.
+<img width="1812" height="903" alt="Screenshot 2026-11-13 021256" src="https://github.com/user-attachments/assets/6baa93a8-0725-4d53-bb26-b9b2219438de" />
+3.
+<img width="1812" height="912" alt="Screenshot 2026-11-13 021320" src="https://github.com/user-attachments/assets/daeffd37-6a59-438e-935e-8103ad15665b" />
+
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python) ![Zero pip deps](https://img.shields.io/badge/pip%20deps-zero%20(stdlib%20only)-brightgreen) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey) ![API Cost](https://img.shields.io/badge/X%20API%20cost-%240-success)
 
 Publish text posts **and PNG images/charts** to X (Twitter) at **\$0 API cost** using **X Web Intent URLs** + **OS Clipboard (`Ctrl+V`)** + a **mandatory human-approval gate** that blocks all auto-posting.
