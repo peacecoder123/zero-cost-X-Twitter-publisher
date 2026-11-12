@@ -1,5 +1,7 @@
 # Zero-Cost X Publisher
 
+> **Developer:** Radhe Wankhade · [@RadheWankhade01](https://x.com/RadheWankhade01) on X
+
 Publish text posts and PNG images/charts to X (Twitter) at **$0 API cost** using **X Web Intent URLs** + **OS Clipboard PNG (`Ctrl+V`)** + **strict human-in-the-loop approval**.
 
 > Built as a practical workaround to X removing the free developer API tier and moving to Pay-Per-Use API credits. Works on Windows, macOS, Linux, and in any modern browser.
@@ -65,3 +67,4 @@ pytest -v
 ## License
 
 MIT
+

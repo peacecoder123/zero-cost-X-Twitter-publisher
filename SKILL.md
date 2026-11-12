@@ -4,6 +4,8 @@ description: >-
   Publish approved text and PNG images to X (Twitter) at $0 API cost using X Web Intent URLs,
   OS clipboard image copy (Ctrl+V), and human confirmation. Use when the user wants to share a
   tweet, thread post, screenshot, or chart on X without paying for the X API or risking unapproved auto-posting.
+author: "Radhe Wankhade (@RadheWankhade01)"
+x_profile: "https://x.com/RadheWankhade01"
 ---
 
 # Zero-Cost X Publisher ($0 API Workflow)
@@ -39,3 +41,4 @@ Publish tweets and visual attachments (charts, screenshots, infographics) to X a
 ## Verification
 - Confirm `scripts/publish_to_x.py` prints `Intent URL:` cleanly, reports `Status: READY` or `CLIPBOARD_COPIED`, and exits with code `0`.
 - Run `pytest` in the repo root to verify URL weighting, approval gates, and clipboard dispatch helpers.
+
