@@ -319,6 +319,52 @@ zero-cost-x-publisher/
 
 ---
 
+## 🔗 Connected Skills Ecosystem
+
+This tool is part of a modular **Open-Source Content & Intelligence Pipeline**. Each tool works 100% standalone, or combines seamlessly with the others:
+
+```
+┌──────────────────────────────────────┐       ┌──────────────────────────────────────┐
+│     Safe RSS News Ingestor           │       │       Trading Chart Exporter         │
+│  (SSRF-safe news & feeds)            │       │   (High-res headless chart capture)  │
+└──────────────────┬───────────────────┘       └──────────────────┬───────────────────┘
+                   │                                              │
+                   ▼                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                          QC Tweet & Thread Composer                                 │
+│         (Deterministic numeric grounding & anti-hallucination verification)         │
+└──────────────────────────────────────────┬──────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                         Publishing Eligibility Gate                                 │
+│            (DRAFT ➔ PENDING_REVIEW ➔ APPROVED ➔ PUBLISHED state machine)            │
+└──────────────────────────────────────────┬──────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                            Zero-Cost X Publisher                                    │
+│             (Web Intent + OS Clipboard PNG Ctrl+V @ $0 API cost)                    │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+                                           ▲
+                                           │ Orchestrated by
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    FastAPI + Celery + Docker Starter                                │
+│             (Production async backend, Redis task queue & PostgreSQL)               │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Pipeline Stage | Repository | Purpose |
+|---|---|---|
+| **1. News Ingestion** | [📰 safe-rss-news-ingestor](https://github.com/peacecoder123/A-production-safe-RSS-Atom-news-aggregator) | Hardened RSS/Atom aggregator that prevents SSRF attacks and strips junk HTML |
+| **2. Chart Visuals** | [📊 trading-chart-exporter](https://github.com/peacecoder123/Trading-chart-exporter-Trading-view-alternative-Skill-) | Headless Playwright exporter for TradingView charts & financial visuals |
+| **3. AI Content QC** | [✍️ qc-tweet-composer](https://github.com/peacecoder123/Quality-Control-gate-for-AI-drafted-tweets-threads-Ai-Skill-) | Fact-checks AI post drafts against sources, catches fake metrics & splits threads |
+| **4. Editorial Gate** | [🚦 publishing-eligibility-gate](https://github.com/peacecoder123/publishing-eligibility-gate) | Content review state machine with audit history preventing unapproved releases |
+| **5. $0 Distribution** | [🚀 zero-cost-x-publisher](https://github.com/peacecoder123/zero-cost-X-Twitter-publisher) *(This repo)* | Publishes text + image to X at $0 cost via web intent + clipboard Ctrl+V |
+| **6. Backend Engine** | [⚡ fastapi-celery-docker-starter](https://github.com/peacecoder123/Production-ready-FastAPI-Celery-Redis-PostgreSQL-Docker-starter) | Production async backend stack with Celery workers, Redis, and PostgreSQL |
+
+---
+
 ## License
 
 MIT — free to use, modify, and distribute.
