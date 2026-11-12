@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zero-Cost X Composer ($0 API + Ctrl+V PNG)</title>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; --muted: #94a3b8; --accent: #0284c7; --ok: #10b981; --warn: #f59e0b; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; padding: 32px 16px; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 720px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 20px; }
+    p { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    textarea { width: 100%; min-height: 140px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: #0b1220; color: var(--text); font-size: 14px; resize: vertical; }
+    .meta { display: flex; justify-content: space-between; margin: 8px 0 16px; font-size: 13px; color: var(--muted); }
+    .dropzone { border: 1px dashed var(--border); border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 16px; background: #0b1220; }
+    .dropzone img { max-width: 100%; max-height: 280px; margin-top: 12px; border-radius: 8px; display: none; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button { border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: #334155; color: var(--text); }
+    .status { margin-top: 14px; padding: 10px 12px; border-radius: 8px; font-size: 13px; display: none; }
+    .approve-box { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13.5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>$0 X Composer (Human-Approved Web Intent + Ctrl+V PNG)</h1>
+    <p>Draft any post, attach a PNG image, explicitly approve it, and click once to copy the image to your clipboard and open the pre-filled X composer.</p>
+
+    <textarea id="post-text" placeholder="Write your post here... Links count as 23 chars in X."></textarea>
+    <div class="meta">
+      <span id="char-count">0 / 280 weighted chars</span>
+      <span id="warn-text" style="color: var(--warn);"></span>
+    </div>
+
+    <div class="dropzone">
+      <label style="cursor: pointer; color: #38bdf8; font-weight: 600;">
+        Attach PNG / Image (optional)
+        <input id="img-input" type="file" accept="image/png,image/jpeg,image/webp" style="display: none;" />
+      </label>
+      <div id="file-label" style="font-size: 12px; color: var(--muted); margin-top: 6px;">No image attached</div>
+      <img id="img-preview" alt="Preview" />
+    </div>
+
+    <label class="approve-box">
+      <input type="checkbox" id="approve-check" />
+      <span>I have reviewed this post and explicitly approve opening it in X.</span>
+    </label>
+
+    <div class="actions">
+      <button class="btn-primary" id="btn-open-x">Approve, Copy PNG &amp; Open in X ($0)</button>
+      <button class="btn-secondary" id="btn-copy-only">Copy Text Only</button>
+    </div>
+
+    <div id="status-box" class="status"></div>
+  </div>
+
+  <script>
+    const textEl = document.getElementById("post-text");
+    const countEl = document.getElementById("char-count");
+    const warnEl = document.getElementById("warn-text");
+    const imgInput = document.getElementById("img-input");
+    const imgPreview = document.getElementById("img-preview");
+    const fileLabel = document.getElementById("file-label");
+    const approveCheck = document.getElementById("approve-check");
+    const statusBox = document.getElementById("status-box");
+
+    let selectedBlob = null;
+
+    function countWeightedChars(txt) {
+      return (txt || "").replace(/https?:\/\/\S+/gi, "X".repeat(23)).length;
+    }
+
+    function updateCounter() {
+      const len = countWeightedChars(textEl.value.trim());
+      countEl.textContent = `${len} / 280 weighted chars`;
+      warnEl.textContent = len > 280 ? "Exceeds 280 chars (OK for X Premium; trim for free tier)" : "";
+    }
+
+    textEl.addEventListener("input", updateCounter);
+
+    imgInput.addEventListener("change", () => {
+      const file = imgInput.files && imgInput.files[0];
+      if (!file) return;
+      selectedBlob = file;
+      fileLabel.textContent = `Attached: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+      imgPreview.src = URL.createObjectURL(file);
+      imgPreview.style.display = "inline-block";
+    });
+
+    function showStatus(msg, ok = true) {
+      statusBox.style.display = "block";
+      statusBox.style.background = ok ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)";
+      statusBox.style.border = `1px solid ${ok ? "#10b981" : "#f59e0b"}`;
+      statusBox.textContent = msg;
+    }
+
+    async function convertToPngBlob(blob) {
+      if (blob.type === "image/png") return blob;
+      const bitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext("2d").drawImage(bitmap, 0, 0);
+      return await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    }
+
+    document.getElementById("btn-open-x").addEventListener("click", async () => {
+      const text = textEl.value.trim();
+      if (!text) return showStatus("Enter post text first.", false);
+      if (!approveCheck.checked) return showStatus("Check the human-approval box before opening X.", false);
+
+      let imgMsg = "No image attached.";
+      if (selectedBlob) {
+        try {
+          const pngBlob = await convertToPngBlob(selectedBlob);
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob })]);
+          imgMsg = "PNG copied to clipboard! Press Ctrl+V (Cmd+V) inside X.";
+        } catch (err) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(selectedBlob);
+          a.download = "x-attachment.png";
+          a.click();
+          imgMsg = "Clipboard blocked by browser; downloaded PNG instead — drag it into X.";
+        }
+      }
+
+      const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      showStatus(`Opened X composer ($0 API cost). ${imgMsg}`, true);
+    });
+
+    document.getElementById("btn-copy-only").addEventListener("click", async () => {
+      const text = textEl.value.trim();
+      if (!text) return showStatus("Nothing to copy.", false);
+      await navigator.clipboard.writeText(text);
+      showStatus("Post text copied to clipboard.", true);
+    });
+  </script>
+</body>
+</html>
