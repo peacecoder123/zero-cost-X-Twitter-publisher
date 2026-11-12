@@ -2,61 +2,285 @@
 
 > **Developer:** Radhe Wankhade · [@RadheWankhade01](https://x.com/RadheWankhade01) on X
 
-Publish text posts and PNG images/charts to X (Twitter) at **$0 API cost** using **X Web Intent URLs** + **OS Clipboard PNG (`Ctrl+V`)** + **strict human-in-the-loop approval**.
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python) ![Zero pip deps](https://img.shields.io/badge/pip%20deps-zero%20(stdlib%20only)-brightgreen) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey) ![API Cost](https://img.shields.io/badge/X%20API%20cost-%240-success)
 
-> Built as a practical workaround to X removing the free developer API tier and moving to Pay-Per-Use API credits. Works on Windows, macOS, Linux, and in any modern browser.
+Publish text posts **and PNG images/charts** to X (Twitter) at **\$0 API cost** using **X Web Intent URLs** + **OS Clipboard (`Ctrl+V`)** + a **mandatory human-approval gate** that blocks all auto-posting.
+
+> **Why this exists:** X killed the free API tier in 2023 and moved to pay-per-use (\$0.10–\$0.15 per tweet via API). This tool uses X's own web intent system — a standard browser URL — to pre-fill the composer so you post for free, every time, with zero API billing.
+
+---
+
+## How It Works
+
+```
+Your text + image
+      │
+      ▼
+┌─────────────────────────────────────┐
+│  1. Validate X weighted char count  │  ← Counts URLs as 23 chars (t.co)
+│  2. Human approval gate             │  ← BLOCKS if --approve not passed
+│  3. Copy PNG to OS clipboard        │  ← PowerShell / osascript / wl-copy
+│  4. Build x.com/intent/tweet?text=  │  ← URL-encoded, opens in browser
+│  5. User presses Ctrl+V in X tab   │  ← Image attaches, human clicks Post
+│  6. Append audit log (JSONL)        │  ← api_cost_usd: 0.0, approved: true
+└─────────────────────────────────────┘
+```
+
+**Zero API calls are made.** The browser opens X's standard compose page — the same one you'd use manually. The difference: your text is pre-filled and your image is on the clipboard.
+
+---
 
 ## Features
 
-- **$0 Publishing:** Uses `https://x.com/intent/tweet?text=...` instead of paid `POST /2/tweets` API calls.
-- **Instant `Ctrl+V` Image Workflow:** Copies any PNG/JPG image straight to your system clipboard right before opening the pre-filled X composer.
-- **Exact X `t.co` Length Accounting:** Counts every `http(s)://...` URL as 23 characters so your character budget matches X's composer.
-- **Human Approval Gate:** Refuses to open the composer unless `--approve` is explicitly passed (or interactively confirmed), preventing accidental posts.
-- **Browser Demo Included:** Zero-backend [`examples/web_composer_demo.html`](./examples/web_composer_demo.html) works offline in Chrome/Edge/Firefox.
-- **Agent Skill Ready:** Includes [`SKILL.md`](./SKILL.md) at repo root so coding agents (Antigravity, Gemini CLI, Claude Code, Cursor) can use it immediately.
+| Feature | Detail |
+|---|---|
+| **\$0 Publishing** | Uses `x.com/intent/tweet?text=...` — no `POST /2/tweets`, no billing |
+| **Clipboard PNG** | Copies chart/screenshot to OS clipboard so you just press `Ctrl+V` |
+| **Exact t.co Counting** | Every `http(s)://...` URL counted as exactly **23 chars**, matching X's real composer |
+| **Hard Approval Gate** | Refuses to open browser without `--approve` or interactive `[y/N]` confirmation |
+| **Audit Log (JSONL)** | Appends every session to a local `.jsonl` with timestamp, char count, `api_cost_usd: 0.0` |
+| **Browser Demo HTML** | Offline `examples/web_composer_demo.html` — works in Chrome/Edge/Firefox, no server |
+| **Agent Skill Ready** | `SKILL.md` at repo root — works with Antigravity, Gemini CLI, Claude Code, Cursor |
+
+---
 
 ## Quick Start
 
-### 1. Standalone CLI (Zero pip dependencies on Windows)
+### 1. Dry Run — Preview character count only (no browser opens)
 
 ```bash
-# Preview character count and generate Web Intent URL (dry run)
-python scripts/publish_to_x.py --text "Shipping our open-source release today! https://github.com/example/repo"
-
-# Copy image to clipboard, approve explicitly, and open X composer
 python scripts/publish_to_x.py \
-  --text "Shipping our open-source release today! https://github.com/example/repo" \
-  --image ./chart.png \
+  --text "Shipping our open-source release today! Check it out 👉 https://github.com/example/repo"
+```
+
+**Terminal output:**
+
+```
+Status: PREVIEW_ONLY
+Weighted chars: 65 / 280
+Intent URL: https://x.com/intent/tweet?text=Shipping%20our%20open-source...
+```
+
+---
+
+### 2. Approve and open X composer (text only)
+
+```bash
+python scripts/publish_to_x.py \
+  --text "Big news: our open-source tool just hit 1,000 GitHub stars 🚀 https://github.com/example/repo" \
+  --approve \
+  --open
+```
+
+**Terminal output:**
+
+```
+Status: OPENED_IN_BROWSER
+Weighted chars: 71 / 280
+Intent URL: https://x.com/intent/tweet?text=Big%20news%3A%20our%20open-source...
+```
+
+The X composer tab opens in your default browser with the text already filled in. Click **Post**.
+
+---
+
+### 3. Full workflow — text + image (most common use case)
+
+```bash
+python scripts/publish_to_x.py \
+  --text "WHEELS.NS breakout setup: Base coiling near ₹2507 resistance. ADR 6.8%, ATR ₹152." \
+  --image ./charts/WHEELS_NS_chart.png \
   --approve \
   --open \
-  --log ./x_audit_log.jsonl
+  --log ./logs/x_audit.jsonl
 ```
 
-Then just press **`Ctrl+V`** (`Cmd+V` on macOS) inside the X composer window to attach your image and click **Post**.
+**Terminal output:**
 
-### 2. Browser UI Demo (Zero server needed)
+```
+Status: OPENED_IN_BROWSER
+Weighted chars: 83 / 280
+Clipboard: CLIPBOARD_COPIED (powershell-winforms)
+Intent URL: https://x.com/intent/tweet?text=WHEELS.NS%20breakout%20setup%3A...
+Next step: Press Ctrl+V (Cmd+V on macOS) inside the X composer tab to paste your image!
+```
 
-Open [`examples/web_composer_demo.html`](./examples/web_composer_demo.html) in your browser:
-1. Type/paste your post text.
-2. Drop in any PNG chart/screenshot.
-3. Click **Approve, Copy PNG & Open X ($0)**.
-4. Hit `Ctrl+V` in X!
+> **What happens next:**
+> 1. X opens in your browser with the text pre-filled ✅
+> 2. Click inside the tweet text area
+> 3. Press **`Ctrl+V`** (Windows/Linux) or **`Cmd+V`** (macOS) — your chart pastes in ✅
+> 4. Click **Post** ✅
 
-### 3. Install as an Agent Skill
+---
+
+### 4. Interactive approval (no --approve flag needed)
 
 ```bash
-# Workspace skill
-git clone https://github.com/<your-username>/zero-cost-x-publisher.git .agents/skills/zero-cost-x-publisher
-
-# Or global skill (Antigravity / Gemini CLI)
-git clone https://github.com/<your-username>/zero-cost-x-publisher.git ~/.gemini/config/skills/zero-cost-x-publisher
+python scripts/publish_to_x.py \
+  --text "My post text here..." \
+  --image ./chart.png \
+  --interactive \
+  --open
 ```
+
+**Terminal output:**
+
+```
+--- POST PREVIEW (83 weighted chars) ---
+My post text here...
+
+Approve and open in X composer? [y/N]: y
+Status: OPENED_IN_BROWSER
+Weighted chars: 83 / 280
+Clipboard: CLIPBOARD_COPIED (powershell-winforms)
+```
+
+---
+
+### 5. JSON output (for piping into other scripts)
+
+```bash
+python scripts/publish_to_x.py \
+  --text "Post text here https://example.com" \
+  --approve \
+  --json
+```
+
+**Terminal output:**
+
+```json
+{
+  "status": "APPROVED_READY",
+  "weighted_chars": 50,
+  "within_standard_limit": true,
+  "warning": null,
+  "intent_url": "https://x.com/intent/tweet?text=Post%20text%20here%20https%3A%2F%2Fexample.com",
+  "clipboard": null,
+  "opened_browser": false
+}
+```
+
+---
+
+### 6. Read post text from a file
+
+```bash
+python scripts/publish_to_x.py \
+  --text-file ./drafts/my_post.txt \
+  --image ./charts/chart.png \
+  --approve \
+  --open \
+  --log ./logs/audit.jsonl
+```
+
+---
+
+### 7. Browser Demo — Zero server, offline
+
+Open `examples/web_composer_demo.html` in any browser:
+
+1. Type or paste your post text
+2. Drag and drop any PNG/JPG chart or screenshot
+3. Click **"Approve, Copy PNG & Open X ($0)"**
+4. Press `Ctrl+V` inside the X tab → your image is there
+5. Click **Post**
+
+---
 
 ## Clipboard Requirements by OS
 
-- **Windows:** Built-in PowerShell + `.NET System.Windows.Forms.Clipboard` (no extra install needed).
-- **macOS:** Built-in `osascript` (no extra install needed).
-- **Linux:** Requires `wl-copy` (Wayland) or `xclip` (X11).
+| OS | Backend | Install needed? |
+|---|---|---|
+| **Windows** | PowerShell + `.NET System.Windows.Forms.Clipboard` | ❌ Built-in |
+| **macOS** | `osascript` (AppleScript) | ❌ Built-in |
+| **Linux (Wayland)** | `wl-copy` | `sudo apt install wl-clipboard` |
+| **Linux (X11)** | `xclip` | `sudo apt install xclip` |
+
+If no clipboard backend is detected on Linux, the tool prints `CLIPBOARD_UNSUPPORTED` and continues — you can still attach the image manually in X.
+
+---
+
+## Character Counting — Why It Matters
+
+X's composer counts characters differently than `len()`:
+
+```
+"Check this out https://github.com/example/very-long-repo-name"
+                 ↑──────────────────────────────────────────────
+                 This whole URL is counted as only 23 chars (t.co wraps it)
+```
+
+This tool replicates that logic exactly:
+
+```python
+# Every http(s) URL is replaced with 23 placeholder chars before counting
+count_x_weighted_chars("Hello https://example.com/long/url")
+# → 6 ("Hello ") + 23 (URL) = 29 chars  ✅ matches X composer
+```
+
+---
+
+## Audit Log Format
+
+Each `--log` append writes one JSONL line per session:
+
+```json
+{
+  "timestamp_utc": "2026-11-13T02:15:00+00:00",
+  "mode": "ZERO_COST_WEB_INTENT",
+  "api_cost_usd": 0.0,
+  "approved_by_human": true,
+  "opened_browser": true,
+  "weighted_chars": 83,
+  "text_preview": "WHEELS.NS breakout setup...",
+  "image_path": "/charts/WHEELS_NS_chart.png",
+  "tweet_url": null,
+  "intent_url": "https://x.com/intent/tweet?text=..."
+}
+```
+
+---
+
+## CLI Reference
+
+```
+usage: publish_to_x.py [--text TEXT | --text-file FILE]
+                        [--image IMAGE]
+                        [--approve] [--interactive]
+                        [--open]
+                        [--log LOG]
+                        [--tweet-url TWEET_URL]
+                        [--json]
+
+Options:
+  --text TEXT          Post text to publish on X
+  --text-file FILE     Path to UTF-8 .txt file with post text
+  --image IMAGE        PNG/JPG to copy to clipboard for Ctrl+V paste in X
+  --approve            Explicit human approval gate (required for --open)
+  --interactive        Prompt [y/N] in terminal before opening X
+  --open               Open X Web Intent URL in default browser (needs --approve)
+  --log FILE           Append JSONL audit record to this file
+  --tweet-url URL      Save live tweet URL in audit log
+  --json               Print structured JSON output instead of plain text
+```
+
+---
+
+## Install as an Agent Skill
+
+```bash
+# Workspace-level skill (project-specific)
+git clone https://github.com/RadheWankhade01/zero-cost-x-publisher.git \
+  .agents/skills/zero-cost-x-publisher
+
+# Global skill (Antigravity / Gemini CLI)
+git clone https://github.com/RadheWankhade01/zero-cost-x-publisher.git \
+  ~/.gemini/config/skills/zero-cost-x-publisher
+```
+
+Once installed, any coding agent that reads `SKILL.md` will automatically know how to use this tool to post to X.
+
+---
 
 ## Running Tests
 
@@ -64,7 +288,42 @@ git clone https://github.com/<your-username>/zero-cost-x-publisher.git ~/.gemini
 pytest -v
 ```
 
+**Expected output:**
+
+```
+tests/test_publish_to_x.py::test_weighted_char_count_no_url PASSED
+tests/test_publish_to_x.py::test_weighted_char_count_with_url PASSED
+tests/test_publish_to_x.py::test_build_intent_url_basic PASSED
+tests/test_publish_to_x.py::test_approval_gate_blocks_without_approve PASSED
+
+4 passed in 0.03s
+```
+
+---
+
+## Project Structure
+
+```
+zero-cost-x-publisher/
+├── SKILL.md                        ← Agent skill definition (Antigravity / Claude / Cursor)
+├── README.md                       ← This file
+├── LICENSE                         ← MIT
+├── .gitignore
+├── scripts/
+│   └── publish_to_x.py             ← Main CLI (zero pip dependencies)
+├── examples/
+│   └── web_composer_demo.html      ← Offline browser UI demo
+└── tests/
+    └── test_publish_to_x.py        ← Pytest tests (stdlib only)
+```
+
+---
+
 ## License
 
-MIT
+MIT — free to use, modify, and distribute.
 
+---
+
+> Built by [Radhe Wankhade](https://x.com/RadheWankhade01) as an open-source contribution.
+> Star ⭐ the repo if it saved you from an X API bill!
